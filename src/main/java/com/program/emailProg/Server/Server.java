@@ -6,9 +6,16 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLServerSocketFactory;
-import java.io.*;
-import java.net.*;
-import java.sql.*;
+import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.PreparedStatement;
+import java.net.Socket;
+import java.net.ServerSocket;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -16,17 +23,18 @@ import java.util.concurrent.Executors;
 import com.google.gson.Gson;
 
 public class Server {
-
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/email_db";
     private static final String DB_USERNAME = "root";
     private static final String DB_PASSWORD = " ";
-    private static final int PORT = 9999;
+
+    private static final int PORT = 8080;
     private static final int MAX_THREADS = 50;
+    private static final int MAX_LOGIN_ATTEMPTS = 5;
+
     private static HikariDataSource dataSource;
     private static ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private static final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
-    private static final int MAX_LOGIN_ATTEMPTS = 5;
 
     public static void main(String[] args) {
         setupConnectionPool();
@@ -89,6 +97,7 @@ public class Server {
             }
         }
 
+        // Handle user request
         private void handleRequest(Map<String, String> requestMap, PrintWriter out, Connection connection) throws SQLException {
             String command = requestMap.get("command").toUpperCase();
 
@@ -228,6 +237,7 @@ public class Server {
             }
         }
 
+        // Mark emails status as notified
         private void markAsNotified(int emailId, Connection connection) throws SQLException {
             String query = "UPDATE emails SET is_sender_notified = true WHERE email_id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
