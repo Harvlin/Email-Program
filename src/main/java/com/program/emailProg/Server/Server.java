@@ -23,26 +23,34 @@ import java.util.concurrent.Executors;
 import com.google.gson.Gson;
 
 public class Server {
+    // Initialize variables that responsible for database connection
     private static final String DB_URL = "jdbc:mysql://localhost:3306/email_db";
     private static final String DB_USERNAME = "root";
     private static final String DB_PASSWORD = " ";
 
-    private static final int PORT = 8080;
+    // Initialize variables that responsible for Server-Client communication and multi-threading
+    private static final int PORT = 3000;
     private static final int MAX_THREADS = 50;
     private static final int MAX_LOGIN_ATTEMPTS = 5;
 
+    // Using hikari to secure the database connection without buffer
     private static HikariDataSource dataSource;
     private static ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
+
+    // Store temporary Client-Message instance
     private static final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
+        // Setup connection
         setupConnectionPool();
         logger.info("Server Starting");
         try {
+            // Secure socket connection by implementing ssl
             SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
             try (ServerSocket serverSocket = ssf.createServerSocket(PORT)) {
                 logger.info("Server listening on port " + PORT);
+                // Start to receive client and start the multi-threading
                 while (true) {
                     Socket clientSocket = serverSocket.accept();
                     logger.info("Client connected from " + clientSocket.getInetAddress());
@@ -57,6 +65,7 @@ public class Server {
     }
 
     private static void setupConnectionPool() {
+        // Connection init
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(DB_URL);
         config.setUsername(DB_USERNAME);
@@ -70,12 +79,14 @@ public class Server {
         private final Socket clientSocket;
         private final Gson gson = new Gson();
 
+        // Constructor for socket
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
         }
 
         @Override
         public void run() {
+            // Set up the bufferedReader and PrintWriter for Server-Client socket and database connection
             try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                  PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                  Connection connection = dataSource.getConnection()) {
