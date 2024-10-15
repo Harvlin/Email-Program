@@ -29,8 +29,8 @@ public class Server {
     private static final String DB_PASSWORD = " ";
 
     // Initialize variables that responsible for Server-Client communication and multi-threading
-    private static final int PORT = 3000;
-    private static final int MAX_THREADS = 50;
+    private static final int PORT = 8080;
+    private static final int MAX_THREADS = 25;
     private static final int MAX_LOGIN_ATTEMPTS = 5;
 
     // Using hikari to secure the database connection without buffer

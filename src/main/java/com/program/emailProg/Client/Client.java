@@ -11,7 +11,7 @@ import java.util.Map;
 public class Client {
 
     private static final String SERVER_ADDRESS = "localhost";
-    private static final int SERVER_PORT = 3000;
+    private static final int SERVER_PORT = 8080;
     private static Gson gson = new Gson();
     private static Socket socket;
     private static BufferedReader in;
