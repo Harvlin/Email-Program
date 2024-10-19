@@ -3,8 +3,6 @@ package com.program.emailProg.Server;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.mindrot.jbcrypt.BCrypt;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.sql.SQLException;
 import java.sql.Connection;
@@ -21,22 +19,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import com.google.gson.Gson;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server {
-    // Initialize variables that responsible for database connection
+    // Initialize variables responsible for database connection
     private static final String DB_URL = "jdbc:mysql://localhost:3306/email_db";
     private static final String DB_USERNAME = "root";
-    private static final String DB_PASSWORD = " ";
+    private static final String DB_PASSWORD = "Vlin*560";
 
-    // Initialize variables that responsible for Server-Client communication and multi-threading
+    // Initialize variables responsible for Server-Client communication and multi-threading
     private static final int PORT = 8080;
     private static final int MAX_THREADS = 25;
     private static final int MAX_LOGIN_ATTEMPTS = 5;
 
-    // Using hikari to secure the database connection without buffer
+    // Using Hikari to secure the database connection without buffer
     private static HikariDataSource dataSource;
     private static ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
-    private static final Logger logger = LoggerFactory.getLogger(Server.class);
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
 
     // Store temporary Client-Message instance
     private static final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
@@ -58,7 +58,7 @@ public class Server {
                 }
             }
         } catch (IOException e) {
-            logger.error(e.toString());
+            logger.log(Level.SEVERE, "Server error", e);
         } finally {
             threadPool.shutdown();
         }
@@ -86,7 +86,7 @@ public class Server {
 
         @Override
         public void run() {
-            // Set up the bufferedReader and PrintWriter for Server-Client socket and database connection
+            // Set up the BufferedReader and PrintWriter for Server-Client socket and database connection
             try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                  PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                  Connection connection = dataSource.getConnection()) {
@@ -98,17 +98,15 @@ public class Server {
                 }
 
             } catch (IOException | SQLException e) {
-                logger.error("Error in client communication", e);
+                logger.log(Level.SEVERE, "Error in client communication", e);
             } finally {
                 try {
                     clientSocket.close();
                 } catch (IOException e) {
-                    logger.error("Failed to close client socket", e);
+                    logger.log(Level.SEVERE, "Failed to close client socket", e);
                 }
             }
         }
-
-        // Handle user request
         private void handleRequest(Map<String, String> requestMap, PrintWriter out, Connection connection) throws SQLException {
             String command = requestMap.get("command").toUpperCase();
 

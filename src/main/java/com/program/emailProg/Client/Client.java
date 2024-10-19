@@ -1,6 +1,8 @@
 package com.program.emailProg.Client;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,7 +26,7 @@ public class Client {
             boolean isLoggedIn = false;
 
             while (!isLoggedIn) {
-                System.out.print("1. Log in\n2. Sign up\nEnter: ");
+                System.out.print("\n1. Log in\n2. Sign up\nEnter: ");
                 String userIn = consoleInput.readLine();
                 if (userIn.equalsIgnoreCase("log in")) {
                     isLoggedIn = login();
@@ -105,15 +107,21 @@ public class Client {
         sendRequest(signUpRequest);
 
         String response = readResponse();
-        Map<String, String> responseMap = gson.fromJson(response, Map.class);
-
-        if ("SIGN_UP_SUCCESS".equals(responseMap.get("status"))) {
-            System.out.println("Sign-up successful! You can now log in.");
-        } else {
-            System.out.println("Sign-up failed. Please try again.");
+        try {
+            // Attempt to parse as a JSON object
+            Map<String, String> responseMap = gson.fromJson(response, Map.class);
+            if ("SIGN_UP_SUCCESS".equals(responseMap.get("status"))) {
+                System.out.println("Sign-up successful! You can now log in.");
+            } else {
+                System.out.println("Sign-up failed. Please try again.");
+            }
+        } catch (JsonSyntaxException e) {
+            // Handle if the response is just a plain string
+            System.out.println("Response: " + response);
         }
     }
-    
+
+
     private static void handleUserCommand() throws IOException {
         showMenu();
         String command = consoleInput.readLine();
@@ -213,11 +221,14 @@ public class Client {
 
     private static String readResponse() {
         try {
-            return in.readLine();
+            String response = in.readLine();
+            System.out.println("Raw response: " + response);  // Add this line to inspect
+            return response;
         } catch (IOException e) {
             throw new RuntimeException("Failed to read response from server", e);
         }
     }
+
 
     private static void sendRequest(Map<String, String> loginReq) {
         String requestJson = gson.toJson(loginReq);
