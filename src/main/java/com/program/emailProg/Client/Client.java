@@ -83,12 +83,16 @@ public class Client {
 
         String response = readResponse();
         Map<String, String> responseMap = gson.fromJson(response, Map.class);
-
-        if ("LOGIN_SUCCESS".equalsIgnoreCase(responseMap.get("status"))) {
-            System.out.println("Login Successful");
-            return true;
-        } else {
-            System.out.println("Login Failed" + responseMap.get("message"));
+        try {
+            if ("LOGIN_SUCCESS".equalsIgnoreCase(responseMap.get("status"))) {
+                System.out.println("Login Successful");
+                return true;
+            } else {
+                System.out.println("Login Failed" + responseMap.get("message"));
+                return false;
+            }
+        } catch (JsonSyntaxException e) {
+            System.out.println("Response: " + response);
             return false;
         }
     }
